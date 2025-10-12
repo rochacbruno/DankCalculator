@@ -112,7 +112,7 @@ Settings are stored in `~/.config/DankMaterialShell/settings.json` under the `ca
 
 ## Author
 
-DMS Team
+Bruno Cesar Rocha 
 
 ## License
 
