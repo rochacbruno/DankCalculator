@@ -15,9 +15,9 @@ Item {
     Component.onCompleted: {
         console.log("Calculator: Plugin loaded")
 
-        // Load custom trigger from settings (default is empty)
+        // Load custom trigger from settings (default is "=")
         if (pluginService) {
-            trigger = pluginService.loadPluginData("calculator", "trigger", "")
+            trigger = pluginService.loadPluginData("calculator", "trigger", "=")
         }
     }
 

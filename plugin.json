@@ -9,7 +9,7 @@
     "capabilities": ["launcher"],
     "component": "./CalculatorLauncher.qml",
     "settings": "./CalculatorSettings.qml",
-    "trigger": "",
+    "trigger": "=",
     "permissions": [
         "settings_read",
         "settings_write"

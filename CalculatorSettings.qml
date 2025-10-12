@@ -61,8 +61,8 @@ FocusScope {
 
                 CheckBox {
                     id: noTriggerToggle
-                    text: "No trigger (always active - recommended)"
-                    checked: loadSettings("noTrigger", true)
+                    text: "No trigger (always active)"
+                    checked: loadSettings("noTrigger", false)
 
                     contentItem: Text {
                         text: noTriggerToggle.text
@@ -95,7 +95,8 @@ FocusScope {
                         if (checked) {
                             saveSettings("trigger", "")
                         } else {
-                            saveSettings("trigger", triggerField.text || "=")
+                            const currentTrigger = triggerField.text || "="
+                            saveSettings("trigger", currentTrigger)
                         }
                     }
                 }
