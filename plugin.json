@@ -4,7 +4,7 @@
     "description": "A calculator plugin that evaluates mathematical expressions and copies results to clipboard",
     "version": "0.1.0",
     "author": "Bruno Cesar Rocha <rochacbruno>",
-    "icon": "acessories-calculator",
+    "icon": "calculate",
     "type": "launcher",
     "capabilities": ["launcher"],
     "component": "./CalculatorLauncher.qml",
