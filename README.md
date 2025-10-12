@@ -5,7 +5,7 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 ## Features
 
 - **Real-time calculation**: Type mathematical expressions directly in the launcher
-- **No trigger by default**: Works immediately when you type math expressions (configurable)
+- **Default prefix**: Uses `=` as the default trigger prefix (configurable)
 - **Safe evaluation**: Only allows mathematical operations, preventing code injection
 - **Clipboard integration**: Press Enter to copy the result to clipboard
 - **Multiple operations**: Supports +, -, *, /, ^, %, and parentheses
@@ -21,45 +21,45 @@ This plugin is located at `~/.config/DankMaterialShell/plugins/Calculator/`
 
 ## Usage
 
-### With Default Settings (No Trigger)
+### With Default Settings (= Prefix)
 
 1. Open the launcher (Ctrl+Space)
-2. Type a mathematical expression: `3 + 3`
+2. Type the `=` prefix followed by a mathematical expression: `= 3 + 3`
 3. The result (`6`) appears as a launcher item
 4. Press Enter to copy the result to clipboard
 
-### With Custom Trigger
+### Customizing the Trigger
 
-You can configure a trigger prefix in the settings:
+You can configure a different trigger prefix or disable it entirely in the settings:
 
 1. Open Settings → Plugins → Calculator
-2. Uncheck "No trigger (always active - recommended)"
-3. Set a custom trigger (e.g., `=`, `calc`, `c`)
-4. In the launcher, type: `= 3 + 3`
+2. Change the trigger to a custom value (e.g., `calc`, `c`, `math`)
+3. Or check "No trigger (always active)" to remove the prefix requirement
+4. In the launcher, type your configured trigger: `calc 3 + 3` or just `3 + 3` (if no trigger)
 5. Press Enter to copy the result
 
 ## Supported Operations
 
-- **Addition**: `3 + 3` → `6`
-- **Subtraction**: `10 - 5` → `5`
-- **Multiplication**: `4 * 7` → `28`
-- **Division**: `20 / 4` → `5`
-- **Exponentiation**: `2 ^ 8` → `256`
-- **Modulo**: `17 % 5` → `2`
-- **Parentheses**: `(5 + 3) * 2` → `16`
-- **Decimals**: `3.14 * 2` → `6.28`
-- **Complex**: `(10 + 5) * 2 - 3 / 3` → `29`
+- **Addition**: `= 3 + 3` → `6`
+- **Subtraction**: `= 10 - 5` → `5`
+- **Multiplication**: `= 4 * 7` → `28`
+- **Division**: `= 20 / 4` → `5`
+- **Exponentiation**: `= 2 ^ 8` → `256`
+- **Modulo**: `= 17 % 5` → `2`
+- **Parentheses**: `= (5 + 3) * 2` → `16`
+- **Decimals**: `= 3.14 * 2` → `6.28`
+- **Complex**: `= (10 + 5) * 2 - 3 / 3` → `29`
 
 ## Examples
 
 | Expression | Result |
 |------------|--------|
-| `3 + 3` | `6` |
-| `100 / 4` | `25` |
-| `2 ^ 10` | `1024` |
-| `(5 + 3) * 2` | `16` |
-| `3.14159 * 2` | `6.28318` |
-| `sqrt(16)` | Not supported (use `16 ^ 0.5` = `4`) |
+| `= 3 + 3` | `6` |
+| `= 100 / 4` | `25` |
+| `= 2 ^ 10` | `1024` |
+| `= (5 + 3) * 2` | `16` |
+| `= 3.14159 * 2` | `6.28318` |
+| `= 16 ^ 0.5` | `4` (square root) |
 
 ## Security
 
@@ -78,14 +78,14 @@ The calculator uses safe expression evaluation:
 
 ## Configuration
 
-Settings are stored in `~/.config/DankMaterialShell/settings.json` under the `calculator` plugin key:
+Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under the `calculator` plugin key:
 
 ```json
 {
   "pluginSettings": {
     "calculator": {
-      "trigger": "",
-      "noTrigger": true
+      "trigger": "=",
+      "noTrigger": false
     }
   }
 }
