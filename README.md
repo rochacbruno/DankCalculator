@@ -2,6 +2,8 @@
 
 A launcher plugin that evaluates mathematical expressions and copies results to the clipboard.
 
+![Calculator Plugin Screenshot](screenshot.png)
+
 ## Features
 
 - **Real-time calculation**: Type mathematical expressions directly in the launcher
