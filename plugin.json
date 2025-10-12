@@ -2,14 +2,15 @@
     "id": "calculator",
     "name": "Calculator",
     "description": "A calculator plugin that evaluates mathematical expressions and copies results to clipboard",
-    "version": "1.0.0",
-    "author": "DMS Team",
-    "icon": "calculate",
+    "version": "0.1.0",
+    "author": "Bruno Cesar Rocha <rochacbruno>",
+    "icon": "acessories-calculator",
     "type": "launcher",
     "capabilities": ["launcher"],
     "component": "./CalculatorLauncher.qml",
     "settings": "./CalculatorSettings.qml",
     "trigger": "=",
+    "requires_dms": ">0.1.18",
     "permissions": [
         "settings_read",
         "settings_write"
