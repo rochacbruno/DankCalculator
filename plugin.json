@@ -1,0 +1,17 @@
+{
+    "id": "calculator",
+    "name": "Calculator",
+    "description": "A calculator plugin that evaluates mathematical expressions and copies results to clipboard",
+    "version": "1.0.0",
+    "author": "DMS Team",
+    "icon": "calculate",
+    "type": "launcher",
+    "capabilities": ["launcher"],
+    "component": "./CalculatorLauncher.qml",
+    "settings": "./CalculatorSettings.qml",
+    "trigger": "",
+    "permissions": [
+        "settings_read",
+        "settings_write"
+    ]
+}
