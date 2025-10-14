@@ -1,46 +1,54 @@
 // QalcState - Global state management for qalc evaluation
 .pragma library
 
-var currentQuery = ""
-var result = ""
-var pending = false
-var error = false
+// Store results per query: { "query": {result: "...", pending: bool, error: bool} }
+var results = {}
 
-function setQuery(query) {
-    currentQuery = query
+function getResult(query) {
+    if (results[query]) {
+        return results[query].result || ""
+    }
+    return ""
 }
 
-function getQuery() {
-    return currentQuery
+function isPending(query) {
+    if (results[query]) {
+        return results[query].pending || false
+    }
+    return false
 }
 
-function setResult(res) {
-    result = res
+function hasError(query) {
+    if (results[query]) {
+        return results[query].error || false
+    }
+    return false
 }
 
-function getResult() {
-    return result
+function setResult(query, result) {
+    if (!results[query]) {
+        results[query] = {}
+    }
+    results[query].result = result
+    results[query].pending = false
+    results[query].error = false
 }
 
-function setPending(val) {
-    pending = val
+function setPending(query, pending) {
+    if (!results[query]) {
+        results[query] = {}
+    }
+    results[query].pending = pending
 }
 
-function isPending() {
-    return pending
-}
-
-function setError(val) {
-    error = val
-}
-
-function hasError() {
-    return error
+function setError(query, error) {
+    if (!results[query]) {
+        results[query] = {}
+    }
+    results[query].error = error
+    results[query].pending = false
 }
 
 function reset() {
-    currentQuery = ""
-    result = ""
-    pending = false
-    error = false
+    results = {}
 }

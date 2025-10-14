@@ -206,9 +206,9 @@ FocusScope {
             }
 
             Text {
-                text: "⚠ Warning: qalc must be installed and in your PATH. If qalc is unavailable, an error notification will be shown."
+                text: "⚠ LIMITATION: Due to DMS's synchronous plugin architecture, qalc results only appear when you type the NEXT character (e.g., add a space). For instant results, disable qalc and use the built-in calculator.js instead."
                 font.pixelSize: 11
-                color: "#FFAA00"
+                color: "#FF6666"
                 wrapMode: Text.WordWrap
                 width: parent.width
                 visible: useQalcToggle.checked
@@ -231,8 +231,8 @@ FocusScope {
                     id: debounceField
                     width: 100
                     height: 40
-                    text: loadSettings("qalcDebounceMs", "100")
-                    placeholderText: "100"
+                    text: loadSettings("qalcDebounceMs", "0")
+                    placeholderText: "0"
                     backgroundColor: "#30FFFFFF"
                     textColor: "#FFFFFF"
 
@@ -245,7 +245,7 @@ FocusScope {
                 }
 
                 Text {
-                    text: "Delay before executing qalc (useful for slow typing)"
+                    text: "Delay before executing qalc (0 = instant, higher = wait for typing to finish)"
                     font.pixelSize: 12
                     color: "#AAFFFFFF"
                     anchors.verticalCenter: parent.verticalCenter

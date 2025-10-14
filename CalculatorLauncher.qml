@@ -21,6 +21,39 @@ Item {
     // Plugin interface signals
     signal itemsChanged()
 
+    // Timer to aggressively force UI updates when qalc results arrive
+    Timer {
+        id: pollTimer
+        interval: 5  // Poll every 5ms
+        repeat: true
+        running: false
+        property string watchQuery: ""
+        property int emitCount: 0
+
+        onTriggered: {
+            const result = QalcState.getResult(watchQuery)
+            if (result.length > 0) {
+                console.error("Calculator: Result ready for", watchQuery, "- forcing update #" + emitCount)
+                root.itemsChanged()
+                emitCount++
+
+                // Keep trying for 500ms (100 attempts)
+                if (emitCount > 100) {
+                    console.error("Calculator: Stopping poll after 100 attempts")
+                    stop()
+                    emitCount = 0
+                    watchQuery = ""
+                }
+            }
+        }
+
+        function watchFor(query) {
+            watchQuery = query
+            emitCount = 0
+            restart()
+        }
+    }
+
     Component.onCompleted: {
         console.log("Calculator: Plugin loaded")
 
@@ -28,7 +61,7 @@ Item {
         if (pluginService) {
             trigger = pluginService.loadPluginData("calculator", "trigger", "=")
             useQalc = pluginService.loadPluginData("calculator", "useQalc", false)
-            qalcDebounceMs = pluginService.loadPluginData("calculator", "qalcDebounceMs", 100)
+            qalcDebounceMs = pluginService.loadPluginData("calculator", "qalcDebounceMs", 0)
         }
     }
 
@@ -38,7 +71,6 @@ Item {
 
         // If query is empty, return nothing
         if (!query || query.trim().length === 0) {
-            QalcState.reset()
             console.error("Calculator: Empty query, returning []")
             return []
         }
@@ -97,98 +129,73 @@ Item {
         ]
     }
 
-    // Handle qalc evaluation with debouncing
+    // Handle qalc evaluation - NO CACHING, each query gets its own result
     function getItemsWithQalc(query) {
-        console.error("Calculator: getItemsWithQalc called with query:", query)
-        console.error("Calculator: Current state - currentQuery:", QalcState.getQuery(), "pending:", QalcState.isPending(), "result:", QalcState.getResult(), "error:", QalcState.hasError())
+        const normalizedQuery = query.trim()
+        console.error("Calculator: getItemsWithQalc for:", normalizedQuery)
 
-        // Check if we have a cached result for this exact query
-        if (QalcState.getQuery() === query && !QalcState.isPending() && QalcState.getResult().length > 0 && !QalcState.hasError()) {
-            console.error("Calculator: Returning cached qalc result:", QalcState.getResult())
+        // Check if we have a result for THIS EXACT query
+        const result = QalcState.getResult(normalizedQuery)
+        const pending = QalcState.isPending(normalizedQuery)
+        const error = QalcState.hasError(normalizedQuery)
+
+        console.error("Calculator: Query state - result:", result, "pending:", pending, "error:", error)
+
+        // If we have a result for this query, return it
+        if (result.length > 0) {
+            console.error("Calculator: Returning result for", normalizedQuery, ":", result)
             return [
                 {
-                    name: QalcState.getResult(),
+                    name: result,
                     icon: "accessories-calculator",
-                    comment: query + " = " + QalcState.getResult() + " (qalc)",
-                    action: "copy:" + QalcState.getResult(),
+                    comment: normalizedQuery + " = " + result + " (qalc)",
+                    action: "copy:" + result,
                     categories: ["Calculator"]
                 }
             ]
         }
 
-        // New query or no cached result, trigger qalc evaluation
-        console.error("Calculator: Triggering new qalc evaluation for:", query)
-        QalcState.setQuery(query)
-        QalcState.setPending(true)
-        QalcState.setError(false)
-        QalcState.setResult("")
+        // If evaluation is pending, show indicator
+        if (pending) {
+            console.error("Calculator: Evaluation pending for:", normalizedQuery)
+            return []  // Empty while calculating
+        }
 
-        // Capture emit callback before async operation
-        const notifyUpdate = root.emitCallback
+        // No result yet and not pending - start evaluation
+        console.error("Calculator: Starting NEW evaluation for:", normalizedQuery)
+        QalcState.setPending(normalizedQuery, true)
 
-        // Trigger qalc evaluation WITHOUT debouncing (0ms = immediate)
-        // The typing itself provides natural debouncing
-        console.error("Calculator: Calling Proc.runCommand immediately (debounce=0)")
-        Proc.runCommand("calculator-qalc", ["qalc", "-t", query], function(output, exitCode) {
-            console.error("Calculator: qalc callback executed - exitCode:", exitCode, "output:", output)
+        // Start poll timer to force UI updates when result arrives
+        pollTimer.watchFor(normalizedQuery)
 
-            // Only use result if this query is still current
-            if (query !== QalcState.getQuery()) {
-                console.error("Calculator: Query changed, ignoring old result. Current:", QalcState.getQuery(), "Old:", query)
-                return
-            }
-
-            console.error("Calculator: Processing qalc result for query:", query)
-            QalcState.setPending(false)
+        Proc.runCommand("calculator-qalc-" + normalizedQuery, ["qalc", "-t", normalizedQuery], function(output, exitCode) {
+            console.error("Calculator: qalc finished for:", normalizedQuery, "exitCode:", exitCode, "output:", output)
 
             if (exitCode !== 0) {
-                console.error("Calculator: qalc failed with exit code", exitCode)
-                console.error("Calculator: qalc is not available or failed to evaluate expression")
-                QalcState.setError(true)
-
-                // Show error notification (only once per query change)
-                if (typeof ToastService !== "undefined") {
-                    ToastService.showError("Calculator", "qalc evaluation failed. Is qalc installed?")
-                }
-
-                // Try to notify UI
-                console.error("Calculator: Attempting to emit itemsChanged after error")
-                try {
-                    notifyUpdate()
-                } catch (e) {
-                    console.error("Calculator: Could not emit signal:", e)
-                }
+                console.error("Calculator: qalc FAILED for:", normalizedQuery)
+                QalcState.setError(normalizedQuery, true)
+                pollTimer.stop()
                 return
             }
 
-            // qalc successful, use the result
             const result = output.trim()
-            if (result.length === 0) {
-                console.error("Calculator: qalc returned empty result")
-                try {
-                    notifyUpdate()
-                } catch (e) {
-                    console.error("Calculator: Could not emit signal:", e)
-                }
-                return
+            if (result.length > 0) {
+                console.error("Calculator: qalc SUCCESS for:", normalizedQuery, "=", result)
+                QalcState.setResult(normalizedQuery, result)
+                // Poll timer will keep trying to update UI
             }
+        }, qalcDebounceMs)
 
-            console.error("Calculator: qalc succeeded with result:", result)
-            QalcState.setResult(result)
-            QalcState.setError(false)
-
-            // Notify UI that items have changed
-            console.error("Calculator: Attempting to emit itemsChanged after success")
-            try {
-                notifyUpdate()
-            } catch (e) {
-                console.error("Calculator: Could not emit signal:", e)
+        // Show calculating indicator while waiting
+        return [
+            {
+                name: "⏳ Calculating...",
+                icon: "accessories-calculator",
+                comment: "Evaluating: " + normalizedQuery,
+                action: "none",
+                categories: ["Calculator"]
             }
-        }, 0)  // No debounce - run immediately
-
-        // Return empty array while waiting for qalc
-        console.error("Calculator: Returning empty array while waiting for qalc")
-        return []
+        ]
     }
 
     // Required function: Execute item action
