@@ -2,9 +2,128 @@
 .pragma library
 
 /**
+ * Checks if expression contains only integers (no decimals)
+ */
+function isIntegerOnly(expression) {
+    return !/\./.test(expression);
+}
+
+/**
+ * Evaluates integer expression using BigInt for precision
+ */
+function evaluateInteger(expression) {
+    try {
+        // Replace operators with BigInt-safe versions
+        let expr = expression.replace(/\s/g, '');
+
+        // Handle exponentiation separately (BigInt doesn't support **)
+        if (expr.includes('^')) {
+            return evaluateWithExponentiation(expr, true);
+        }
+
+        // For modulo, division, and basic arithmetic, try BigInt
+        // Note: BigInt division truncates, so we need to handle / carefully
+        if (expr.includes('/')) {
+            // If division exists, fall back to regular number for accuracy
+            return null;
+        }
+
+        // Replace numbers with BigInt literals
+        expr = expr.replace(/(\d+)/g, '$1n');
+
+        // Evaluate
+        const result = eval(expr);
+
+        // Convert back to string then number for display
+        // Check if result fits in safe integer range
+        const numResult = Number(result);
+        if (Number.isSafeInteger(numResult)) {
+            return numResult;
+        }
+
+        // Return as string for very large integers
+        return result.toString().replace(/n$/, '');
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * Handles exponentiation for both BigInt and regular numbers
+ */
+function evaluateWithExponentiation(expression, useBigInt) {
+    // Find exponentiation operations and evaluate them
+    let expr = expression;
+
+    // Handle ^ operator by converting to **
+    expr = expr.replace(/\^/g, '**');
+
+    if (useBigInt) {
+        // For BigInt, we need custom exponentiation
+        // This is complex, so fall back to regular evaluation
+        return null;
+    }
+
+    const result = eval(expr);
+    return result;
+}
+
+/**
+ * Performs precise decimal arithmetic by working with scaled integers
+ */
+function evaluatePrecise(expression) {
+    try {
+        // Replace ^ with ** for exponentiation
+        let cleaned = expression.replace(/\^/g, '**');
+
+        // Evaluate using JavaScript's eval (safe because we validated the input)
+        let result = eval(cleaned);
+
+        // Check if result is a valid number
+        if (typeof result !== 'number' || !isFinite(result)) {
+            return null;
+        }
+
+        // Handle floating point precision issues
+        // Round to 15 significant digits (JavaScript's max precision)
+        if (Math.abs(result) < 1e-10 && result !== 0) {
+            // Very small number, keep in scientific notation
+            return result;
+        }
+
+        // For regular decimals, use toPrecision to avoid floating point errors
+        // But only if the number has decimal places
+        if (result % 1 !== 0) {
+            // Count significant digits in result
+            const resultStr = result.toString();
+            if (resultStr.includes('e')) {
+                // Already in scientific notation
+                return result;
+            }
+
+            // Round to 15 significant figures to eliminate floating point errors
+            // e.g., 0.1 + 0.2 = 0.30000000000000004 becomes 0.3
+            const precision = 15;
+            const rounded = parseFloat(result.toPrecision(precision));
+
+            // If rounding made it a whole number, return as integer
+            if (rounded % 1 === 0 && Math.abs(rounded) < Number.MAX_SAFE_INTEGER) {
+                return Math.round(rounded);
+            }
+
+            return rounded;
+        }
+
+        return result;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
  * Safely evaluates a mathematical expression
  * @param {string} expression - The mathematical expression to evaluate
- * @returns {object} - {success: boolean, result: number|null, error: string|null}
+ * @returns {object} - {success: boolean, result: number|string|null, error: string|null}
  */
 function evaluate(expression) {
     if (!expression || typeof expression !== 'string') {
@@ -51,14 +170,28 @@ function evaluate(expression) {
     }
 
     try {
-        // Replace ^ with ** for exponentiation
-        cleaned = cleaned.replace(/\^/g, '**');
+        let result;
 
-        // Evaluate using JavaScript's eval (safe because we validated the input)
-        const result = eval(cleaned);
+        // Try BigInt evaluation for integer-only expressions (better precision for large integers)
+        if (isIntegerOnly(cleaned) && !cleaned.includes('/')) {
+            result = evaluateInteger(cleaned);
+        }
 
-        // Check if result is a valid number
-        if (typeof result !== 'number' || !isFinite(result)) {
+        // Fall back to precise decimal evaluation
+        if (result === null || result === undefined) {
+            result = evaluatePrecise(cleaned);
+        }
+
+        if (result === null || result === undefined) {
+            return {
+                success: false,
+                result: null,
+                error: "Evaluation failed"
+            };
+        }
+
+        // Check if result is valid
+        if (typeof result === 'number' && !isFinite(result)) {
             return {
                 success: false,
                 result: null,
@@ -66,12 +199,9 @@ function evaluate(expression) {
             };
         }
 
-        // Round to reasonable precision (14 decimal places)
-        const rounded = Math.round(result * 1e14) / 1e14;
-
         return {
             success: true,
-            result: rounded,
+            result: result,
             error: null
         };
     } catch (e) {

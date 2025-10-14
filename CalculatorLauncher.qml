@@ -48,12 +48,16 @@ Item {
         // Format the result nicely
         let resultString = result.result.toString()
 
-        // For very long decimals, use scientific notation
-        if (resultString.length > 15 && Math.abs(result.result) >= 1e6) {
-            resultString = result.result.toExponential(6)
-        } else if (resultString.length > 15 && Math.abs(result.result) < 1e-6) {
-            resultString = result.result.toExponential(6)
+        // Only apply scientific notation formatting for actual numbers, not BigInt strings
+        if (typeof result.result === 'number') {
+            // For very long decimals or very large/small numbers, use scientific notation
+            if (resultString.length > 15 && Math.abs(result.result) >= 1e6) {
+                resultString = result.result.toExponential(6)
+            } else if (resultString.length > 15 && Math.abs(result.result) < 1e-6) {
+                resultString = result.result.toExponential(6)
+            }
         }
+        // For BigInt string results, use as-is (already formatted)
 
         return [
             {
