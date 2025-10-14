@@ -147,6 +147,119 @@ FocusScope {
         }
 
         Column {
+            spacing: 12
+            width: parent.width - 32
+
+            Text {
+                text: "Calculator Engine"
+                font.pixelSize: 16
+                font.weight: Font.Medium
+                color: "#FFFFFF"
+            }
+
+            Text {
+                text: "Choose between the built-in calculator or qalc for more advanced calculations."
+                font.pixelSize: 12
+                color: "#CCFFFFFF"
+                wrapMode: Text.WordWrap
+                width: parent.width
+            }
+
+            Row {
+                spacing: 12
+
+                CheckBox {
+                    id: useQalcToggle
+                    text: "Use qalc for evaluation (more precision and features)"
+                    checked: loadSettings("useQalc", false)
+
+                    contentItem: Text {
+                        text: useQalcToggle.text
+                        font.pixelSize: 14
+                        color: "#FFFFFF"
+                        leftPadding: useQalcToggle.indicator.width + 8
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    indicator: Rectangle {
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        radius: 4
+                        border.color: useQalcToggle.checked ? "#4CAF50" : "#60FFFFFF"
+                        border.width: 2
+                        color: useQalcToggle.checked ? "#4CAF50" : "transparent"
+
+                        Rectangle {
+                            width: 12
+                            height: 12
+                            anchors.centerIn: parent
+                            radius: 2
+                            color: "#FFFFFF"
+                            visible: useQalcToggle.checked
+                        }
+                    }
+
+                    onCheckedChanged: {
+                        saveSettings("useQalc", checked)
+                    }
+                }
+            }
+
+            Text {
+                text: "⚠ LIMITATION: Due to DMS's synchronous plugin architecture, qalc results only appear when you type the NEXT character (e.g., add a space). For instant results, disable qalc and use the built-in calculator.js instead."
+                font.pixelSize: 11
+                color: "#FF6666"
+                wrapMode: Text.WordWrap
+                width: parent.width
+                visible: useQalcToggle.checked
+            }
+
+            Row {
+                spacing: 12
+                anchors.left: parent.left
+                anchors.right: parent.right
+                visible: useQalcToggle.checked
+
+                Text {
+                    text: "Debounce (ms):"
+                    font.pixelSize: 14
+                    color: "#FFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                DankTextField {
+                    id: debounceField
+                    width: 100
+                    height: 40
+                    text: loadSettings("qalcDebounceMs", "0")
+                    placeholderText: "0"
+                    backgroundColor: "#30FFFFFF"
+                    textColor: "#FFFFFF"
+
+                    onTextEdited: {
+                        const value = parseInt(text)
+                        if (!isNaN(value) && value >= 0) {
+                            saveSettings("qalcDebounceMs", value)
+                        }
+                    }
+                }
+
+                Text {
+                    text: "Delay before executing qalc (0 = instant, higher = wait for typing to finish)"
+                    font.pixelSize: 12
+                    color: "#AAFFFFFF"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+
+        Rectangle {
+            width: parent.width - 32
+            height: 1
+            color: "#30FFFFFF"
+        }
+
+        Column {
             spacing: 8
             width: parent.width - 32
 
@@ -207,6 +320,20 @@ FocusScope {
                     text: "• Decimals: 3.14 * 2"
                     font.pixelSize: 12
                     color: "#CCFFFFFF"
+                }
+
+                Text {
+                    text: "• Unit conversion (qalc only): 2m to inches"
+                    font.pixelSize: 12
+                    color: useQalcToggle.checked ? "#4CAF50" : "#666666"
+                    visible: true
+                }
+
+                Text {
+                    text: "• Advanced math (qalc only): sin(45), sqrt(16), log(100)"
+                    font.pixelSize: 12
+                    color: useQalcToggle.checked ? "#4CAF50" : "#666666"
+                    visible: true
                 }
             }
         }
