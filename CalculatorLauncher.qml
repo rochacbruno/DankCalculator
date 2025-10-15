@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs.Services
 import "calculator.js" as Calculator
 
@@ -95,16 +96,8 @@ Item {
 
     // Helper function to copy to clipboard
     function copyToClipboard(text) {
-        if (typeof Clipboard !== "undefined") {
-            Clipboard.text = text
-            showToast("Copied to clipboard: " + text)
-        } else if (typeof globalThis !== "undefined" && globalThis.clipboard) {
-            globalThis.clipboard.setText(text)
-            showToast("Copied to clipboard: " + text)
-        } else {
-            console.log("Calculator: Would copy to clipboard:", text)
-            showToast("Result: " + text)
-        }
+        Quickshell.execDetached(["sh", "-c", "echo -n '" + text + "' | wl-copy"])
+        showToast("Copied to clipboard: " + text)
     }
 
     // Helper function to show toast notification

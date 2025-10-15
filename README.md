@@ -14,7 +14,25 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 
 ## Installation
 
-This plugin is located at `~/.config/DankMaterialShell/plugins/Calculator/`
+### Via DMS
+
+```bash
+dms plugins install Calculator
+```
+
+### Via DMS GUI
+- Mod + ,
+- Go to Plugins Tab
+- Choose Browse
+- Enable third party
+- install Calculator
+
+### Manually
+
+```
+cd ~/.config/DankMaterialShell/plugins
+git clone https://github.com/rochacbruno/DankCalculator Calculator
+```
 
 1. Open DMS Settings (Ctrl+,)
 2. Navigate to Plugins tab
@@ -39,6 +57,16 @@ You can configure a different trigger prefix or disable it entirely in the setti
 3. Or check "No trigger (always active)" to remove the prefix requirement
 4. In the launcher, type your configured trigger: `calc 3 + 3` or just `3 + 3` (if no trigger)
 5. Press Enter to copy the result
+
+### Adding a keybinding (niri)
+
+```kdl
+binds {
+      Mod+Shift+C hotkey-overlay-title="Calculator" {
+        spawn "dms" "ipc" "call" "spotlight" "openQuery" "=";
+    }
+}
+```
 
 ## Supported Operations
 

@@ -11,6 +11,7 @@
     "settings": "./CalculatorSettings.qml",
     "trigger": "=",
     "requires_dms": ">0.1.18",
+    "requires": ["wl-copy"],
     "permissions": [
         "settings_read",
         "settings_write"
