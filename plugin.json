@@ -2,7 +2,7 @@
     "id": "calculator",
     "name": "Calculator",
     "description": "A calculator plugin that evaluates mathematical expressions and copies results to clipboard",
-    "version": "0.1.0",
+    "version": "0.1.3",
     "author": "Bruno Cesar Rocha <rochacbruno>",
     "icon": "calculate",
     "type": "launcher",
