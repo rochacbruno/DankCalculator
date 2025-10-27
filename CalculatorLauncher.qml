@@ -63,7 +63,7 @@ Item {
         return [
             {
                 name: resultString,
-                icon: "accessories-calculator",
+                icon: "material:equal",
                 comment: trimmedQuery + " = " + resultString,
                 action: "copy:" + resultString,
                 categories: ["Calculator"]
