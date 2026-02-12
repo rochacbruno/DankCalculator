@@ -33,6 +33,7 @@ QtObject {
         trigger = pluginService.loadPluginData("calculator", "trigger", "=");
         calcEngine = pluginService.loadPluginData("calculator", "calcEngine", "default");
         QalcService.qalcCommand = pluginService.loadPluginData("calculator", "qalcCommand", "qalc -i -t -set \"decimal comma off\" -c 0");
+        QalcService.active = (calcEngine === "qalc");
     }
 
     function getItems(query) {

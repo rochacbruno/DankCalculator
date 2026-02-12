@@ -5,6 +5,7 @@ import Quickshell.Io
 
 Singleton {
     id: root
+    property bool active: false
     property string qalcCommand: "qalc -i -t -set \"decimal comma off\" -c 0"
     property string lastResult: ""
 
@@ -33,6 +34,8 @@ Singleton {
     }
 
     onQalcCommandChanged: {
+        if (!active)
+            return;
         if (qalcProc.running) {
             qalcProc.running = false
         }
@@ -42,7 +45,7 @@ Singleton {
     Process {
         id: qalcProc
         command: ["stdbuf", "-oL"].concat(root.splitCommand(root.qalcCommand))
-        running: true
+        running: root.active
         stdinEnabled: true
 
         stdout: SplitParser {
@@ -56,7 +59,7 @@ Singleton {
         }
 
         onRunningChanged: {
-            if (!running) {
+            if (!running && root.active) {
                 console.warn("Calculator: qalc process died, restarting...")
                 running = true
             }
