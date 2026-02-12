@@ -30,6 +30,36 @@ PluginSettings {
         opacity: 0.3
     }
 
+    SelectionSetting {
+        id: engineSetting
+        settingKey: "calcEngine"
+        label: "Calculation Engine"
+        description: engineSetting.value === "qalc"
+            ? "Using qalc (libqalculate). Supports unit conversions, hex, and more. Requires 'qalc' in PATH."
+            : "Using built-in JavaScript engine. Supports basic arithmetic."
+        defaultValue: "default"
+        options: [
+            { label: "Default (JavaScript)", value: "default" },
+            { label: "Qalc (libqalculate)", value: "qalc" }
+        ]
+    }
+
+    StringSetting {
+        visible: engineSetting.value === "qalc"
+        settingKey: "qalcCommand"
+        label: "Qalc Command"
+        description: "Full command with arguments. Use quotes for multi-word arguments."
+        placeholder: "qalc -i -t -set \"decimal comma off\" -c 0"
+        defaultValue: "qalc -i -t -set \"decimal comma off\" -c 0"
+    }
+
+    Rectangle {
+        width: parent.width
+        height: 1
+        color: Theme.outline
+        opacity: 0.3
+    }
+
     ToggleSetting {
         id: noTriggerToggle
         settingKey: "noTrigger"
@@ -74,9 +104,28 @@ PluginSettings {
         width: parent.width
         spacing: Theme.spacingXS
         leftPadding: Theme.spacingM
+        visible: engineSetting.value !== "qalc"
 
         Repeater {
             model: ["Addition: 3 + 3", "Subtraction: 10 - 5", "Multiplication: 4 * 7", "Division: 20 / 4", "Exponentiation: 2 ^ 8", "Modulo: 17 % 5", "Parentheses: (5 + 3) * 2", "Decimals: 3.14 * 2"]
+
+            StyledText {
+                required property string modelData
+                text: "• " + modelData
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.surfaceVariantText
+            }
+        }
+    }
+
+    Column {
+        width: parent.width
+        spacing: Theme.spacingXS
+        leftPadding: Theme.spacingM
+        visible: engineSetting.value === "qalc"
+
+        Repeater {
+            model: ["Arithmetic: 5 * (3 + 2)", "Unit conversion: 12cm to inches", "Hex conversion: 255 to hex", "Percentage: 15% of 200", "Currency: 100 USD to EUR", "Functions: sqrt(144)", "Constants: pi * r^2"]
 
             StyledText {
                 required property string modelData

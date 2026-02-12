@@ -2,19 +2,37 @@ import QtQuick
 import Quickshell
 import qs.Services
 import "calculator.js" as Calculator
+import "."
 
 QtObject {
     id: root
 
     property var pluginService: null
+    property string pluginId: "calculator"
     property string trigger: ""
+    property string calcEngine: "default"
+    property string lastSentQuery: ""
 
     signal itemsChanged
+
+    property Connections qalcConn: Connections {
+        target: QalcService
+        enabled: root.calcEngine === "qalc"
+        function onResultReady(result) {
+            if (!root.pluginService || !root.pluginId)
+                return;
+            if (typeof root.pluginService.requestLauncherUpdate === "function") {
+                root.pluginService.requestLauncherUpdate(root.pluginId);
+            }
+        }
+    }
 
     Component.onCompleted: {
         if (!pluginService)
             return;
         trigger = pluginService.loadPluginData("calculator", "trigger", "=");
+        calcEngine = pluginService.loadPluginData("calculator", "calcEngine", "default");
+        QalcService.qalcCommand = pluginService.loadPluginData("calculator", "qalcCommand", "qalc -i -t -set \"decimal comma off\" -c 0");
     }
 
     function getItems(query) {
@@ -22,6 +40,15 @@ QtObject {
             return [];
 
         const trimmedQuery = query.trim();
+
+        if (calcEngine === "qalc") {
+            return getItemsQalc(trimmedQuery);
+        }
+
+        return getItemsDefault(trimmedQuery);
+    }
+
+    function getItemsDefault(trimmedQuery) {
         if (!Calculator.isMathExpression(trimmedQuery))
             return [];
 
@@ -47,6 +74,34 @@ QtObject {
                 categories: ["Calculator"]
             }
         ];
+    }
+
+    function getItemsQalc(trimmedQuery) {
+        if (trimmedQuery !== lastSentQuery) {
+            QalcService.lastResult = "";
+            QalcService.calculate(trimmedQuery);
+            lastSentQuery = trimmedQuery;
+        }
+
+        const result = QalcService.lastResult;
+
+        if (!result) {
+            return [{
+                name: "Calculating...",
+                icon: "material:calculate",
+                comment: trimmedQuery,
+                action: "none",
+                categories: ["Calculator"]
+            }];
+        }
+
+        return [{
+            name: result,
+            icon: "material:calculate",
+            comment: trimmedQuery + " = " + result,
+            action: "copy:" + result,
+            categories: ["Calculator"]
+        }];
     }
 
     function executeItem(item) {
@@ -80,5 +135,11 @@ QtObject {
         if (!pluginService)
             return;
         pluginService.savePluginData("calculator", "trigger", trigger);
+    }
+
+    onCalcEngineChanged: {
+        if (!pluginService)
+            return;
+        pluginService.savePluginData("calculator", "calcEngine", calcEngine);
     }
 }

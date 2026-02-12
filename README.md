@@ -14,6 +14,7 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 - **Safe evaluation**: Only allows mathematical operations, preventing code injection
 - **Clipboard integration**: Press Enter to copy the result to clipboard
 - **Multiple operations**: Supports +, -, *, /, ^, %, and parentheses
+- **Qalc engine support**: Optionally use `qalc` (libqalculate) for unit conversions, hex, currency, and more
 
 ## Installation
 
@@ -61,6 +62,28 @@ You can configure a different trigger prefix or disable it entirely in the setti
 4. In the launcher, type your configured trigger: `calc 3 + 3` or just `3 + 3` (if no trigger)
 5. Press Enter to copy the result
 
+### Using the Qalc Engine
+
+The plugin supports an alternative calculation engine powered by [qalc](https://qalculate.github.io/) (libqalculate), which adds unit conversions, hex/binary conversions, currency conversion, and many more features.
+
+**To enable it:**
+
+1. Install `qalc` on your system (e.g., `sudo dnf install qalculate` or `sudo apt install qalc`)
+2. Open Settings → Plugins → Calculator
+3. Change **Calculation Engine** from "Default (JavaScript)" to "Qalc (libqalculate)"
+
+**Qalc examples:**
+
+| Expression | Result |
+|------------|--------|
+| `= 12cm to inches` | `4.724409449 in` |
+| `= 255 to hex` | `0xFF` |
+| `= 100 USD to EUR` | (current exchange rate) |
+| `= 15% of 200` | `30` |
+| `= sqrt(144)` | `12` |
+| `= pi * 3^2` | `28.274333882...` |
+| `= 5 gallons to liters` | `18.92705892 L` |
+
 ### Adding a keybinding (niri)
 
 ```kdl
@@ -73,6 +96,8 @@ binds {
 
 ## Supported Operations
 
+### Default Engine (JavaScript)
+
 - **Addition**: `= 3 + 3` → `6`
 - **Subtraction**: `= 10 - 5` → `5`
 - **Multiplication**: `= 4 * 7` → `28`
@@ -82,6 +107,19 @@ binds {
 - **Parentheses**: `= (5 + 3) * 2` → `16`
 - **Decimals**: `= 3.14 * 2` → `6.28`
 - **Complex**: `= (10 + 5) * 2 - 3 / 3` → `29`
+
+### Qalc Engine (libqalculate)
+
+Supports everything the default engine does, plus:
+
+- **Unit conversions**: `= 12cm to inches`, `= 5 gallons to liters`
+- **Hex/Binary**: `= 255 to hex`, `= 0xFF to decimal`
+- **Percentages**: `= 15% of 200`
+- **Currency**: `= 100 USD to EUR`
+- **Functions**: `= sqrt(144)`, `= sin(45 deg)`, `= log(1000)`
+- **Constants**: `= pi * r^2`, `= c / 2` (speed of light)
+
+See the [qalc manual](https://qalculate.github.io/manual/) for a full list of supported features.
 
 ## Examples
 
@@ -96,17 +134,21 @@ binds {
 
 ## Security
 
-The calculator uses safe expression evaluation:
+The default JavaScript engine uses safe expression evaluation:
 - Only allows numbers, operators (+, -, *, /, ^, %), parentheses, and dots
 - Rejects any expressions with letters or special characters (except operators)
 - Prevents code injection by validating input before evaluation
+
+The qalc engine delegates evaluation to the `qalc` binary, which runs as a sandboxed child process.
 
 ## Files
 
 - `plugin.json` - Plugin manifest
 - `CalculatorLauncher.qml` - Main launcher component
 - `CalculatorSettings.qml` - Settings UI
-- `calculator.js` - Safe expression evaluation logic
+- `calculator.js` - Safe expression evaluation logic (default engine)
+- `QalcService.qml` - Qalc process manager singleton (qalc engine)
+- `qmldir` - QML module directory
 - `README.md` - This file
 
 ## Configuration
@@ -118,11 +160,14 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
   "pluginSettings": {
     "calculator": {
       "trigger": "=",
-      "noTrigger": false
+      "noTrigger": false,
+      "calcEngine": "default"
     }
   }
 }
 ```
+
+Set `"calcEngine"` to `"qalc"` to use the qalc engine, or `"default"` for the built-in JavaScript engine.
 
 ## Troubleshooting
 
@@ -134,6 +179,11 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
 **Result shows wrong value:**
 - JavaScript has floating-point precision limitations
 - Very large or very small numbers may use scientific notation
+- Try switching to the qalc engine for better precision
+
+**Qalc engine shows "Calculating..." but no result:**
+- Make sure `qalc` is installed and available in your PATH
+- Test by running `qalc -t "2+2"` in a terminal
 
 **Copy to clipboard doesn't work:**
 - Make sure your system clipboard is accessible
@@ -141,11 +191,11 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
 
 ## Version
 
-1.0.0
+0.2.0
 
 ## Author
 
-Bruno Cesar Rocha 
+Bruno Cesar Rocha
 
 ## License
 
