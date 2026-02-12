@@ -15,6 +15,7 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 - **Clipboard integration**: Press Enter to copy the result to clipboard
 - **Multiple operations**: Supports +, -, *, /, ^, %, and parentheses
 - **Qalc engine support**: Optionally use `qalc` (libqalculate) for unit conversions, hex, currency, and more
+- **Calculation history**: Recent results are shown when the trigger is typed with no expression, newest first (in-memory, configurable size)
 
 ## Installation
 
@@ -83,6 +84,16 @@ The plugin supports an alternative calculation engine powered by [qalc](https://
 | `= sqrt(144)` | `12` |
 | `= pi * 3^2` | `28.274333882...` |
 | `= 5 gallons to liters` | `18.92705892 L` |
+
+### Viewing History
+
+After calculating expressions, you can recall recent results:
+
+1. Open the launcher and type just the trigger (e.g., `=`)
+2. Your recent calculations appear as a list, newest first
+3. Select any history item to copy its result to clipboard
+
+History is stored in-memory and clears when DMS restarts. The number of entries kept is configurable via the **History Size** setting (default: 10).
 
 ### Adding a keybinding (niri)
 
@@ -161,7 +172,8 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
     "calculator": {
       "trigger": "=",
       "noTrigger": false,
-      "calcEngine": "default"
+      "calcEngine": "default",
+      "keepLastResults": "10"
     }
   }
 }

@@ -85,6 +85,14 @@ PluginSettings {
         defaultValue: "="
     }
 
+    StringSetting {
+        settingKey: "keepLastResults"
+        label: "History Size"
+        description: "Number of recent results to show when calculator is triggered with no expression"
+        placeholder: "10"
+        defaultValue: "10"
+    }
+
     Rectangle {
         width: parent.width
         height: 1

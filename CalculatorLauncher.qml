@@ -12,6 +12,8 @@ QtObject {
     property string trigger: ""
     property string calcEngine: "default"
     property string lastSentQuery: ""
+    property var history: []
+    property int keepLastResults: 10
 
     signal itemsChanged
 
@@ -32,13 +34,40 @@ QtObject {
             return;
         trigger = pluginService.loadPluginData("calculator", "trigger", "=");
         calcEngine = pluginService.loadPluginData("calculator", "calcEngine", "default");
+        keepLastResults = parseInt(pluginService.loadPluginData("calculator", "keepLastResults", "10")) || 10;
         QalcService.qalcCommand = pluginService.loadPluginData("calculator", "qalcCommand", "qalc -i -t -set \"decimal comma off\" -c 0");
         QalcService.active = (calcEngine === "qalc");
     }
 
+    function addToHistory(expression, result) {
+        if (history.length > 0 && history[0].expression === expression && history[0].result === result)
+            return;
+        var filtered = history.filter(function(entry) {
+            return entry.expression !== expression;
+        });
+        var updated = [{expression: expression, result: result}].concat(filtered);
+        if (updated.length > keepLastResults)
+            updated = updated.slice(0, keepLastResults);
+        history = updated;
+    }
+
+    function getHistoryItems() {
+        if (history.length === 0)
+            return [];
+        return history.map(function(entry) {
+            return {
+                name: entry.result,
+                icon: "material:history",
+                comment: entry.expression + " = " + entry.result,
+                action: "copy:" + entry.result,
+                categories: ["Calculator"]
+            };
+        });
+    }
+
     function getItems(query) {
         if (!query || query.trim().length === 0)
-            return [];
+            return getHistoryItems();
 
         const trimmedQuery = query.trim();
 
@@ -115,6 +144,11 @@ QtObject {
         switch (actionType) {
         case "copy":
             copyToClipboard(actionData);
+            if (item.comment) {
+                var eqIdx = item.comment.indexOf(" = ");
+                if (eqIdx !== -1)
+                    addToHistory(item.comment.substring(0, eqIdx), actionData);
+            }
             break;
         default:
             showToast("Unknown action: " + actionType);
