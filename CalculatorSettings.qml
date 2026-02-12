@@ -93,6 +93,25 @@ PluginSettings {
         defaultValue: "10"
     }
 
+    ToggleSetting {
+        id: persistHistoryToggle
+        settingKey: "persistHistoryOnFile"
+        label: "Persist History"
+        description: persistHistoryToggle.value
+            ? "History is saved to file and restored across sessions."
+            : "History is in-memory only and cleared on restart."
+        defaultValue: false
+    }
+
+    StringSetting {
+        visible: persistHistoryToggle.value
+        settingKey: "historyFilePath"
+        label: "History File Path"
+        description: "Path to the JSON file where history is stored. Leave empty for default location."
+        placeholder: "Default: <plugins>/calculator_history.json"
+        defaultValue: ""
+    }
+
     Rectangle {
         width: parent.width
         height: 1

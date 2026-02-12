@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.Services
 import "calculator.js" as Calculator
 import "."
@@ -14,8 +15,31 @@ QtObject {
     property string lastSentQuery: ""
     property var history: []
     property int keepLastResults: 10
+    property bool persistHistoryOnFile: false
+    property string historyFilePath: ""
 
     signal itemsChanged
+
+    property FileView historyFile: FileView {
+        id: historyFile
+        path: ""
+        blockWrites: true
+        atomicWrites: true
+
+        onLoaded: {
+            try {
+                var data = JSON.parse(text());
+                if (Array.isArray(data))
+                    root.history = data;
+            } catch (e) {
+                console.log("[Calculator] Failed to parse history file:", e);
+            }
+        }
+
+        onLoadFailed: {
+            console.log("[Calculator] No existing history file, starting fresh");
+        }
+    }
 
     property Connections qalcConn: Connections {
         target: QalcService
@@ -35,8 +59,19 @@ QtObject {
         trigger = pluginService.loadPluginData("calculator", "trigger", "=");
         calcEngine = pluginService.loadPluginData("calculator", "calcEngine", "default");
         keepLastResults = parseInt(pluginService.loadPluginData("calculator", "keepLastResults", "10")) || 10;
+        persistHistoryOnFile = pluginService.loadPluginData("calculator", "persistHistoryOnFile", false);
+        var defaultHistoryPath = pluginService.pluginDirectory + "/calculator_history.json";
+        historyFilePath = pluginService.loadPluginData("calculator", "historyFilePath", defaultHistoryPath);
+        if (persistHistoryOnFile) {
+            historyFile.path = historyFilePath;
+        }
         QalcService.qalcCommand = pluginService.loadPluginData("calculator", "qalcCommand", "qalc -i -t -set \"decimal comma off\" -c 0");
         QalcService.active = (calcEngine === "qalc");
+    }
+
+    function saveHistory() {
+        if (persistHistoryOnFile && historyFile.path)
+            historyFile.setText(JSON.stringify(history, null, 2));
     }
 
     function addToHistory(expression, result) {
@@ -49,6 +84,7 @@ QtObject {
         if (updated.length > keepLastResults)
             updated = updated.slice(0, keepLastResults);
         history = updated;
+        saveHistory();
     }
 
     function getHistoryItems() {

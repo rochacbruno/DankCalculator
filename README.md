@@ -16,6 +16,7 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 - **Multiple operations**: Supports +, -, *, /, ^, %, and parentheses
 - **Qalc engine support**: Optionally use `qalc` (libqalculate) for unit conversions, hex, currency, and more
 - **Calculation history**: Recent results are shown when the trigger is typed with no expression, newest first (in-memory, configurable size)
+- **Persistent history**: Optionally save history to a JSON file so it survives DMS restarts
 
 ## Installation
 
@@ -93,7 +94,17 @@ After calculating expressions, you can recall recent results:
 2. Your recent calculations appear as a list, newest first
 3. Select any history item to copy its result to clipboard
 
-History is stored in-memory and clears when DMS restarts. The number of entries kept is configurable via the **History Size** setting (default: 10).
+History is stored in-memory by default and clears when DMS restarts. The number of entries kept is configurable via the **History Size** setting (default: 10).
+
+### Persisting History
+
+To keep history across DMS restarts:
+
+1. Open Settings -> Plugins -> Calculator
+2. Enable **Persist History**
+3. Optionally set a custom **History File Path** (defaults to `<plugins>/calculator_history.json`)
+
+When enabled, history is saved to a JSON file every time a result is copied, and loaded back on startup.
 
 ### Adding a keybinding (niri)
 
@@ -173,7 +184,9 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
       "trigger": "=",
       "noTrigger": false,
       "calcEngine": "default",
-      "keepLastResults": "10"
+      "keepLastResults": "10",
+      "persistHistoryOnFile": false,
+      "historyFilePath": ""
     }
   }
 }
