@@ -8,8 +8,15 @@ Singleton {
     property bool active: false
     property string qalcCommand: "qalc -i -t -set \"decimal comma off\" -c 0"
     property string lastResult: ""
+    property bool failed: false
+    property int _failCount: 0
 
     signal resultReady(string result)
+
+    onActiveChanged: {
+        _failCount = 0
+        failed = false
+    }
 
     function splitCommand(cmd) {
         var args = []
@@ -60,9 +67,28 @@ Singleton {
 
         onRunningChanged: {
             if (!running && root.active) {
-                console.warn("Calculator: qalc process died, restarting...")
-                running = true
+                root._failCount++
+                if (root._failCount > 3) {
+                    console.warn("Calculator: qalc process failed repeatedly, giving up. Is qalc installed?")
+                    root.failed = true
+                    return
+                }
+                console.warn("Calculator: qalc process died, retrying (" + root._failCount + "/3)...")
+                retryTimer.interval = root._failCount * 1000
+                retryTimer.restart()
+            } else if (running) {
+                root._failCount = 0
+                root.failed = false
             }
+        }
+    }
+
+    Timer {
+        id: retryTimer
+        repeat: false
+        onTriggered: {
+            if (root.active && !qalcProc.running)
+                qalcProc.running = true
         }
     }
 

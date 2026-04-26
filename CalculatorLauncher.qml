@@ -143,6 +143,16 @@ QtObject {
     }
 
     function getItemsQalc(trimmedQuery) {
+        if (QalcService.failed) {
+            return [{
+                name: "qalc is not available",
+                icon: "material:error_outline",
+                comment: "Install libqalculate or switch to the default engine in settings",
+                action: "none",
+                categories: ["Calculator"]
+            }];
+        }
+
         if (trimmedQuery !== lastSentQuery) {
             QalcService.lastResult = "";
             QalcService.calculate(trimmedQuery);
