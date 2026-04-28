@@ -1,9 +1,120 @@
 // Calculator utility for safe mathematical expression evaluation
 .pragma library
 
-/**
- * Checks if expression contains only integers (no decimals)
- */
+var MATH_FUNCTION_NAMES = [
+    'asinh', 'acosh', 'atanh',
+    'sinh', 'cosh', 'tanh',
+    'asin', 'acos', 'atan2', 'atan',
+    'sind', 'cosd', 'tand',
+    'sin', 'cos', 'tan',
+    'sqrt', 'cbrt',
+    'floor', 'ceil', 'round', 'trunc',
+    'log', 'ln', 'exp', 'pow',
+    'min', 'max', 'abs'
+];
+
+var MATH_CONSTANTS = ['pi', 'e'];
+
+var _mathNamesPattern = null;
+
+function _getMathNamesRegex() {
+    if (!_mathNamesPattern) {
+        var allNames = MATH_FUNCTION_NAMES.concat(MATH_CONSTANTS);
+        _mathNamesPattern = new RegExp('\\b(' + allNames.join('|') + ')\\b', 'i');
+    }
+    return _mathNamesPattern;
+}
+
+function containsMathFunctions(expression) {
+    return _getMathNamesRegex().test(expression);
+}
+
+function _findMatchingParen(expr, openPos) {
+    var depth = 1;
+    var pos = openPos + 1;
+    while (pos < expr.length && depth > 0) {
+        if (expr[pos] === '(') depth++;
+        if (expr[pos] === ')') depth--;
+        pos++;
+    }
+    return depth === 0 ? pos - 1 : -1;
+}
+
+function _replaceDegreeFunc(expr, funcName, mathFunc) {
+    var pattern = new RegExp('\\b' + funcName + '\\s*\\(', 'gi');
+    var match;
+    var result = expr;
+    var offset = 0;
+
+    while ((match = pattern.exec(expr)) !== null) {
+        var nameStart = match.index + offset;
+        var openParen = nameStart + match[0].length - 1;
+        var resultStr = result;
+        var closeParen = _findMatchingParen(resultStr, openParen);
+        if (closeParen === -1) continue;
+
+        var innerExpr = resultStr.substring(openParen + 1, closeParen);
+        var replacement = mathFunc + '((' + innerExpr + ')*Math.PI/180)';
+        result = resultStr.substring(0, nameStart) + replacement + resultStr.substring(closeParen + 1);
+        offset += result.length - expr.length - offset;
+    }
+    return result;
+}
+
+function preprocessExpression(expression) {
+    var processed = expression;
+
+    processed = _replaceDegreeFunc(processed, 'sind', 'Math.sin');
+    processed = _replaceDegreeFunc(processed, 'cosd', 'Math.cos');
+    processed = _replaceDegreeFunc(processed, 'tand', 'Math.tan');
+
+    var functionMap = [
+        ['asinh', 'Math.asinh'], ['acosh', 'Math.acosh'], ['atanh', 'Math.atanh'],
+        ['sinh', 'Math.sinh'], ['cosh', 'Math.cosh'], ['tanh', 'Math.tanh'],
+        ['asin', 'Math.asin'], ['acos', 'Math.acos'], ['atan2', 'Math.atan2'], ['atan', 'Math.atan'],
+        ['sin', 'Math.sin'], ['cos', 'Math.cos'], ['tan', 'Math.tan'],
+        ['sqrt', 'Math.sqrt'], ['cbrt', 'Math.cbrt'],
+        ['floor', 'Math.floor'], ['ceil', 'Math.ceil'], ['round', 'Math.round'], ['trunc', 'Math.trunc'],
+        ['log', 'Math.log10'], ['ln', 'Math.log'],
+        ['exp', 'Math.exp'], ['pow', 'Math.pow'],
+        ['min', 'Math.min'], ['max', 'Math.max'], ['abs', 'Math.abs']
+    ];
+
+    for (var i = 0; i < functionMap.length; i++) {
+        var name = functionMap[i][0];
+        var replacement = functionMap[i][1];
+        // Match function name with optional preceding char; skip if preceded by '.' (already replaced)
+        processed = processed.replace(new RegExp('(^|[^.])(\\b' + name + '\\s*\\()', 'gi'), function(m, prefix, fn) {
+            return prefix + replacement + '(';
+        });
+    }
+
+    // Replace 'pi' only when not preceded by '.' (avoid re-replacing Math.PI)
+    processed = processed.replace(/(^|[^.])(\bpi\b)/gi, function(m, prefix) {
+        return prefix + 'Math.PI';
+    });
+    // Replace standalone 'e' not adjacent to digits (avoid matching 1e5)
+    processed = processed.replace(/(^|[^0-9.])(\be\b)(?![0-9])/gi, function(m, prefix) {
+        return prefix + 'Math.E';
+    });
+
+    return processed;
+}
+
+function validateMathExpression(expression) {
+    var stripped = expression.toLowerCase();
+    var allNames = MATH_FUNCTION_NAMES.concat(MATH_CONSTANTS);
+    for (var i = 0; i < allNames.length; i++) {
+        stripped = stripped.replace(new RegExp('\\b' + allNames[i] + '\\b', 'g'), '');
+    }
+    // After removing function names, only numbers, operators, parens, dots, spaces, commas should remain
+    if (!/^[0-9+\-*/().\s%^,]*$/.test(stripped.trim())) {
+        return false;
+    }
+    // Must have at least one digit or known constant
+    return /\d/.test(expression) || /\b(pi|e)\b/i.test(expression);
+}
+
 function isIntegerOnly(expression) {
     return !/\./.test(expression);
 }
@@ -134,10 +245,8 @@ function evaluate(expression) {
         };
     }
 
-    // Clean the expression
     let cleaned = expression.trim();
 
-    // Check if it's empty
     if (cleaned.length === 0) {
         return {
             success: false,
@@ -146,38 +255,46 @@ function evaluate(expression) {
         };
     }
 
-    // Only allow numbers, basic operators, parentheses, dots, and spaces
-    const allowedChars = /^[0-9+\-*/().\s%^]+$/;
-    if (!allowedChars.test(cleaned)) {
-        return {
-            success: false,
-            result: null,
-            error: "Invalid characters in expression"
-        };
-    }
+    var hasFunctions = containsMathFunctions(cleaned);
 
-    // Check if it looks like a mathematical expression
-    // Must contain at least one operator or be a simple number
-    const hasOperator = /[+\-*/^%]/.test(cleaned);
-    const isSimpleNumber = /^-?\d+\.?\d*$/.test(cleaned);
+    if (hasFunctions) {
+        if (!validateMathExpression(cleaned)) {
+            return {
+                success: false,
+                result: null,
+                error: "Invalid characters in expression"
+            };
+        }
+        cleaned = preprocessExpression(cleaned);
+    } else {
+        const allowedChars = /^[0-9+\-*/().\s%^]+$/;
+        if (!allowedChars.test(cleaned)) {
+            return {
+                success: false,
+                result: null,
+                error: "Invalid characters in expression"
+            };
+        }
 
-    if (!hasOperator && !isSimpleNumber) {
-        return {
-            success: false,
-            result: null,
-            error: "Not a valid mathematical expression"
-        };
+        const hasOperator = /[+\-*/^%]/.test(cleaned);
+        const isSimpleNumber = /^-?\d+\.?\d*$/.test(cleaned);
+
+        if (!hasOperator && !isSimpleNumber) {
+            return {
+                success: false,
+                result: null,
+                error: "Not a valid mathematical expression"
+            };
+        }
     }
 
     try {
         let result;
 
-        // Try BigInt evaluation for integer-only expressions (better precision for large integers)
-        if (isIntegerOnly(cleaned) && !cleaned.includes('/')) {
+        if (!hasFunctions && isIntegerOnly(cleaned) && !cleaned.includes('/')) {
             result = evaluateInteger(cleaned);
         }
 
-        // Fall back to precise decimal evaluation
         if (result === null || result === undefined) {
             result = evaluatePrecise(cleaned);
         }
@@ -190,7 +307,6 @@ function evaluate(expression) {
             };
         }
 
-        // Check if result is valid
         if (typeof result === 'number' && !isFinite(result)) {
             return {
                 success: false,
@@ -225,19 +341,19 @@ function isMathExpression(query) {
 
     const cleaned = query.trim();
 
-    // Must contain only allowed characters
+    if (containsMathFunctions(cleaned)) {
+        return validateMathExpression(cleaned);
+    }
+
     const allowedChars = /^[0-9+\-*/().\s%^]+$/;
     if (!allowedChars.test(cleaned)) {
         return false;
     }
 
-    // Must have at least one digit
     if (!/\d/.test(cleaned)) {
         return false;
     }
 
-    // Must be at least 3 characters for an expression (e.g., "1+1")
-    // or be a simple number
     const hasOperator = /[+\-*/^%]/.test(cleaned);
     const isSimpleNumber = /^-?\d+\.?\d*$/.test(cleaned);
 

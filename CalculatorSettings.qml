@@ -36,7 +36,7 @@ PluginSettings {
         label: "Calculation Engine"
         description: engineSetting.value === "qalc"
             ? "Using qalc (libqalculate). Supports unit conversions, hex, and more. Requires 'qalc' in PATH."
-            : "Using built-in JavaScript engine. Supports basic arithmetic."
+            : "Using built-in JavaScript engine. Supports arithmetic, math functions, and constants."
         defaultValue: "default"
         options: [
             { label: "Default (JavaScript)", value: "default" },
@@ -134,7 +134,7 @@ PluginSettings {
         visible: engineSetting.value !== "qalc"
 
         Repeater {
-            model: ["Addition: 3 + 3", "Subtraction: 10 - 5", "Multiplication: 4 * 7", "Division: 20 / 4", "Exponentiation: 2 ^ 8", "Modulo: 17 % 5", "Parentheses: (5 + 3) * 2", "Decimals: 3.14 * 2"]
+            model: ["Addition: 3 + 3", "Subtraction: 10 - 5", "Multiplication: 4 * 7", "Division: 20 / 4", "Exponentiation: 2 ^ 8", "Modulo: 17 % 5", "Parentheses: (5 + 3) * 2", "Decimals: 3.14 * 2", "Functions: sin(1.57), sqrt(16), log(100), ln(e)", "Constants: pi * 2, e ^ 3", "Degrees: sind(90), cosd(60), tand(45)"]
 
             StyledText {
                 required property string modelData

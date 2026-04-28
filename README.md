@@ -14,6 +14,9 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 - **Safe evaluation**: Only allows mathematical operations, preventing code injection
 - **Clipboard integration**: Press Enter to copy the result to clipboard
 - **Multiple operations**: Supports +, -, *, /, ^, %, and parentheses
+- **Math functions**: sin, cos, tan, sqrt, log, ln, pow, abs, floor, ceil, round, and more
+- **Constants**: pi and e
+- **Degree trig**: sind, cosd, tand for degree-based trigonometry
 - **Qalc engine support**: Optionally use `qalc` (libqalculate) for unit conversions, hex, currency, and more
 - **Calculation history**: Recent results are shown when the trigger is typed with no expression, newest first (in-memory, configurable size)
 - **Persistent history**: Optionally save history to a JSON file so it survives DMS restarts
@@ -120,6 +123,8 @@ binds {
 
 ### Default Engine (JavaScript)
 
+**Arithmetic:**
+
 - **Addition**: `= 3 + 3` → `6`
 - **Subtraction**: `= 10 - 5` → `5`
 - **Multiplication**: `= 4 * 7` → `28`
@@ -129,6 +134,19 @@ binds {
 - **Parentheses**: `= (5 + 3) * 2` → `16`
 - **Decimals**: `= 3.14 * 2` → `6.28`
 - **Complex**: `= (10 + 5) * 2 - 3 / 3` → `29`
+
+**Math functions:**
+
+- **Trigonometric (radians)**: `= sin(pi/2)` → `1`, `= cos(0)` → `1`, `= tan(pi/4)` → `1`
+- **Trigonometric (degrees)**: `= sind(90)` → `1`, `= cosd(60)` → `0.5`, `= tand(45)` → `1`
+- **Inverse trig**: `= asin(1)` → `1.5707...`, `= acos(0)` → `1.5707...`, `= atan(1)` → `0.7853...`
+- **Hyperbolic**: `= sinh(1)`, `= cosh(1)`, `= tanh(0.5)` and inverse variants (asinh, acosh, atanh)
+- **Logarithmic**: `= log(100)` → `2` (base 10), `= ln(e)` → `1` (natural)
+- **Roots**: `= sqrt(144)` → `12`, `= cbrt(27)` → `3`
+- **Rounding**: `= floor(3.7)` → `3`, `= ceil(3.2)` → `4`, `= round(3.5)` → `4`, `= trunc(3.9)` → `3`
+- **Other**: `= abs(-5)` → `5`, `= min(3, 7)` → `3`, `= max(3, 7)` → `7`, `= pow(2, 10)` → `1024`
+- **Constants**: `= pi * 2` → `6.2831...`, `= e ^ 2` → `7.389...`
+- **Combined**: `= sqrt(pow(3, 2) + pow(4, 2))` → `5`
 
 ### Qalc Engine (libqalculate)
 
@@ -153,12 +171,18 @@ See the [qalc manual](https://qalculate.github.io/manual/) for a full list of su
 | `= (5 + 3) * 2` | `16` |
 | `= 3.14159 * 2` | `6.28318` |
 | `= 16 ^ 0.5` | `4` (square root) |
+| `= sin(pi/2)` | `1` |
+| `= sqrt(144)` | `12` |
+| `= log(100)` | `2` |
+| `= sind(30)` | `0.5` |
+| `= pi * 2` | `6.28318...` |
 
 ## Security
 
 The default JavaScript engine uses safe expression evaluation:
-- Only allows numbers, operators (+, -, *, /, ^, %), parentheses, and dots
-- Rejects any expressions with letters or special characters (except operators)
+- Only allows numbers, operators (+, -, *, /, ^, %), parentheses, dots, and whitelisted math function names
+- Math function names (sin, cos, sqrt, etc.) are validated against a strict whitelist before evaluation
+- Rejects any expressions with unrecognized letters or special characters
 - Prevents code injection by validating input before evaluation
 
 The qalc engine delegates evaluation to the `qalc` binary, which runs as a sandboxed child process.
