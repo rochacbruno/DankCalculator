@@ -53,6 +53,18 @@ QtObject {
         }
     }
 
+    property Connections numbatConn: Connections {
+        target: NumbatService
+        enabled: root.calcEngine === "numbat"
+        function onResultReady(result) {
+            if (!root.pluginService || !root.pluginId)
+                return;
+            if (typeof root.pluginService.requestLauncherUpdate === "function") {
+                root.pluginService.requestLauncherUpdate(root.pluginId);
+            }
+        }
+    }
+
     Component.onCompleted: {
         if (!pluginService)
             return;
@@ -67,6 +79,8 @@ QtObject {
         }
         QalcService.qalcCommand = pluginService.loadPluginData("calculator", "qalcCommand", "qalc -i -t -set \"decimal comma off\" -c 0");
         QalcService.active = (calcEngine === "qalc");
+        NumbatService.numbatCommand = pluginService.loadPluginData("calculator", "numbatCommand", "numbat");
+        NumbatService.active = (calcEngine === "numbat");
     }
 
     function saveHistory() {
@@ -109,6 +123,10 @@ QtObject {
 
         if (calcEngine === "qalc") {
             return getItemsQalc(trimmedQuery);
+        }
+
+        if (calcEngine === "numbat") {
+            return getItemsNumbat(trimmedQuery);
         }
 
         return getItemsDefault(trimmedQuery);
@@ -180,6 +198,44 @@ QtObject {
         }];
     }
 
+    function getItemsNumbat(trimmedQuery) {
+        if (NumbatService.failed) {
+            return [{
+                name: "numbat is not available",
+                icon: "material:error_outline",
+                comment: "Install numbat or switch to the default engine in settings",
+                action: "none",
+                categories: ["Calculator"]
+            }];
+        }
+
+        if (trimmedQuery !== lastSentQuery) {
+            NumbatService.lastResult = "";
+            NumbatService.calculate(trimmedQuery);
+            lastSentQuery = trimmedQuery;
+        }
+
+        const result = NumbatService.lastResult;
+
+        if (!result) {
+            return [{
+                name: "Calculating...",
+                icon: "material:calculate",
+                comment: trimmedQuery,
+                action: "none",
+                categories: ["Calculator"]
+            }];
+        }
+
+        return [{
+            name: result,
+            icon: "material:calculate",
+            comment: trimmedQuery + " = " + result,
+            action: "copy:" + result,
+            categories: ["Calculator"]
+        }];
+    }
+
     function executeItem(item) {
         if (!item?.action)
             return;
@@ -222,5 +278,7 @@ QtObject {
         if (!pluginService)
             return;
         pluginService.savePluginData("calculator", "calcEngine", calcEngine);
+        QalcService.active = (calcEngine === "qalc");
+        NumbatService.active = (calcEngine === "numbat");
     }
 }

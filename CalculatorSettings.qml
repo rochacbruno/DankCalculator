@@ -36,11 +36,14 @@ PluginSettings {
         label: "Calculation Engine"
         description: engineSetting.value === "qalc"
             ? "Using qalc (libqalculate). Supports unit conversions, hex, and more. Requires 'qalc' in PATH."
+            : engineSetting.value === "numbat"
+            ? "Using numbat. Supports units, scientific functions, and more. Requires 'numbat' in PATH."
             : "Using built-in JavaScript engine. Supports arithmetic, math functions, and constants."
         defaultValue: "default"
         options: [
             { label: "Default (JavaScript)", value: "default" },
-            { label: "Qalc (libqalculate)", value: "qalc" }
+            { label: "Qalc (libqalculate)", value: "qalc" },
+            { label: "Numbat", value: "numbat" }
         ]
     }
 
@@ -51,6 +54,15 @@ PluginSettings {
         description: "Full command with arguments. Use quotes for multi-word arguments."
         placeholder: "qalc -i -t -set \"decimal comma off\" -c 0"
         defaultValue: "qalc -i -t -set \"decimal comma off\" -c 0"
+    }
+
+    StringSetting {
+        visible: engineSetting.value === "numbat"
+        settingKey: "numbatCommand"
+        label: "Numbat Command"
+        description: "Binary name or path. Runs as an interactive process."
+        placeholder: "numbat"
+        defaultValue: "numbat"
     }
 
     Rectangle {
@@ -131,7 +143,7 @@ PluginSettings {
         width: parent.width
         spacing: Theme.spacingXS
         leftPadding: Theme.spacingM
-        visible: engineSetting.value !== "qalc"
+        visible: engineSetting.value === "default"
 
         Repeater {
             model: ["Addition: 3 + 3", "Subtraction: 10 - 5", "Multiplication: 4 * 7", "Division: 20 / 4", "Exponentiation: 2 ^ 8", "Modulo: 17 % 5", "Parentheses: (5 + 3) * 2", "Decimals: 3.14 * 2", "Functions: sin(1.57), sqrt(16), log(100), ln(e)", "Constants: pi * 2, e ^ 3", "Degrees: sind(90), cosd(60), tand(45)"]
@@ -153,6 +165,24 @@ PluginSettings {
 
         Repeater {
             model: ["Arithmetic: 5 * (3 + 2)", "Unit conversion: 12cm to inches", "Hex conversion: 255 to hex", "Percentage: 15% of 200", "Currency: 100 USD to EUR", "Functions: sqrt(144)", "Constants: pi * r^2"]
+
+            StyledText {
+                required property string modelData
+                text: "• " + modelData
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.surfaceVariantText
+            }
+        }
+    }
+
+    Column {
+        width: parent.width
+        spacing: Theme.spacingXS
+        leftPadding: Theme.spacingM
+        visible: engineSetting.value === "numbat"
+
+        Repeater {
+            model: ["Arithmetic: 5 * (3 + 2)", "Unit conversion: 12 cm -> inches", "Speed: 30 km/h -> mi/h", "Functions: sqrt(144)", "Constants: pi * r^2", "Date/time: now() -> unixtime", "Scientific: 1.2e3 J -> kWh"]
 
             StyledText {
                 required property string modelData

@@ -18,6 +18,7 @@ A launcher plugin that evaluates mathematical expressions and copies results to 
 - **Constants**: pi and e
 - **Degree trig**: sind, cosd, tand for degree-based trigonometry
 - **Qalc engine support**: Optionally use `qalc` (libqalculate) for unit conversions, hex, currency, and more
+- **Numbat engine support**: Optionally use [numbat](https://numbat.dev) for scientific computations with physical dimensions and units
 - **Calculation history**: Recent results are shown when the trigger is typed with no expression, newest first (in-memory, configurable size)
 - **Persistent history**: Optionally save history to a JSON file so it survives DMS restarts
 
@@ -88,6 +89,29 @@ The plugin supports an alternative calculation engine powered by [qalc](https://
 | `= sqrt(144)` | `12` |
 | `= pi * 3^2` | `28.274333882...` |
 | `= 5 gallons to liters` | `18.92705892 L` |
+
+### Using the Numbat Engine
+
+The plugin also supports [numbat](https://numbat.dev), a statically typed language for scientific computations with first-class support for physical dimensions and units.
+
+**To enable it:**
+
+1. Install `numbat` on your system (e.g., `cargo install numbat` or via your package manager)
+2. Open Settings -> Plugins -> Calculator
+3. Change **Calculation Engine** from "Default (JavaScript)" to "Numbat"
+
+**Numbat examples:**
+
+| Expression | Result |
+|------------|--------|
+| `= 5 * 5` | `25` |
+| `= 12 cm -> inches` | `4.72441 in` |
+| `= 30 km/h -> mi/h` | `18.6411 mi/h` |
+| `= sqrt(144)` | `12` |
+| `= pi * 3^2` | `28.2743...` |
+| `= 1.2e3 J -> kWh` | `3.33333e-4 kWh` |
+
+See the [numbat documentation](https://numbat.dev/docs/) for the full list of supported features.
 
 ### Viewing History
 
@@ -161,6 +185,19 @@ Supports everything the default engine does, plus:
 
 See the [qalc manual](https://qalculate.github.io/manual/) for a full list of supported features.
 
+### Numbat Engine
+
+Supports everything the default engine does, plus:
+
+- **Unit conversions**: `= 12 cm -> inches`, `= 5 gallon -> liter`
+- **Speed/compound units**: `= 30 km/h -> mi/h`
+- **Functions**: `= sqrt(144)`, `= sin(45 deg)`, `= log(1000)`
+- **Constants**: `= pi * 3^2`, `= speed_of_light`
+- **Date/time**: `= now() -> unixtime`
+- **Scientific notation**: `= 1.2e3 J -> kWh`
+
+See the [numbat documentation](https://numbat.dev/docs/) for a full list of supported features.
+
 ## Examples
 
 | Expression | Result |
@@ -187,6 +224,8 @@ The default JavaScript engine uses safe expression evaluation:
 
 The qalc engine delegates evaluation to the `qalc` binary, which runs as a sandboxed child process.
 
+The numbat engine delegates evaluation to the `numbat` binary, which runs as a persistent interactive process.
+
 ## Files
 
 - `plugin.json` - Plugin manifest
@@ -194,6 +233,7 @@ The qalc engine delegates evaluation to the `qalc` binary, which runs as a sandb
 - `CalculatorSettings.qml` - Settings UI
 - `calculator.js` - Safe expression evaluation logic (default engine)
 - `QalcService.qml` - Qalc process manager singleton (qalc engine)
+- `NumbatService.qml` - Numbat process manager singleton (numbat engine)
 - `qmldir` - QML module directory
 - `README.md` - This file
 
@@ -216,7 +256,7 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
 }
 ```
 
-Set `"calcEngine"` to `"qalc"` to use the qalc engine, or `"default"` for the built-in JavaScript engine.
+Set `"calcEngine"` to `"qalc"` for the qalc engine, `"numbat"` for the numbat engine, or `"default"` for the built-in JavaScript engine.
 
 ## Troubleshooting
 
@@ -233,6 +273,11 @@ Set `"calcEngine"` to `"qalc"` to use the qalc engine, or `"default"` for the bu
 **Qalc engine shows "Calculating..." but no result:**
 - Make sure `qalc` is installed and available in your PATH
 - Test by running `qalc -t "2+2"` in a terminal
+
+**Numbat engine shows "Calculating..." but no result:**
+- Make sure `numbat` is installed and available in your PATH
+- Test by running `numbat -e '2+2'` in a terminal
+- Check the Numbat Command setting if using a custom binary path
 
 **Copy to clipboard doesn't work:**
 - Make sure your system clipboard is accessible
