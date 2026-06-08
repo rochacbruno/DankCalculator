@@ -80,6 +80,8 @@ QtObject {
         QalcService.qalcCommand = pluginService.loadPluginData("calculator", "qalcCommand", "qalc -i -t -set \"decimal comma off\" -c 0");
         QalcService.active = (calcEngine === "qalc");
         NumbatService.numbatCommand = pluginService.loadPluginData("calculator", "numbatCommand", "numbat");
+        var numbatDebounceMs = parseInt(pluginService.loadPluginData("calculator", "numbatDebounceMs", "150"));
+        NumbatService.debounceMs = isNaN(numbatDebounceMs) ? 150 : Math.max(0, numbatDebounceMs);
         NumbatService.active = (calcEngine === "numbat");
     }
 

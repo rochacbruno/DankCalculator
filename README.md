@@ -248,6 +248,7 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
       "trigger": "=",
       "noTrigger": false,
       "calcEngine": "default",
+      "numbatDebounceMs": "150",
       "keepLastResults": "10",
       "persistHistoryOnFile": false,
       "historyFilePath": ""
@@ -257,6 +258,7 @@ Settings are stored in `~/.config/DankMaterialShell/plugin_settings.json` under 
 ```
 
 Set `"calcEngine"` to `"qalc"` for the qalc engine, `"numbat"` for the numbat engine, or `"default"` for the built-in JavaScript engine.
+Set `"numbatDebounceMs"` to the delay in milliseconds before numbat evaluates the latest expression. The default is `150`; use `0` to evaluate immediately.
 
 ## Troubleshooting
 
