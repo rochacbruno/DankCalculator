@@ -7,6 +7,7 @@ Singleton {
     id: root
     property bool active: false
     property string numbatCommand: "numbat"
+    property int debounceMs: 150
     property string lastResult: ""
     property bool failed: false
     property int _failCount: 0
@@ -97,7 +98,7 @@ Singleton {
 
     Timer {
         id: debounceTimer
-        interval: 400
+        interval: root.debounceMs
         onTriggered: {
             if (root.pendingExpression && numbatProc.running) {
                 numbatProc.write(root.pendingExpression + "\n")

@@ -65,6 +65,15 @@ PluginSettings {
         defaultValue: "numbat"
     }
 
+    StringSetting {
+        visible: engineSetting.value === "numbat"
+        settingKey: "numbatDebounceMs"
+        label: "Numbat Debounce (ms)"
+        description: "Delay after typing before evaluating. Use 0 to evaluate immediately."
+        placeholder: "150"
+        defaultValue: "150"
+    }
+
     Rectangle {
         width: parent.width
         height: 1
