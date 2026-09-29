@@ -258,7 +258,7 @@ QtObject {
     }
 
     function copyToClipboard(text) {
-        Quickshell.execDetached(["sh", "-c", "echo -n '" + text + "' | dms cl copy"]);
+        Quickshell.execDetached(["dms", "cl", "copy", text]);
         showToast("Copied to clipboard: " + text);
     }
 
